@@ -19,6 +19,8 @@ Wv = nn.Linear(hidden_dim, hidden_dim)
 Q = Wq(X)
 K = Wk(X)
 V = Wv(X)
+print("Q Bfore:")
+print(Q)
 
 # reshape
 
@@ -28,6 +30,7 @@ V = V.view(N, num_heads, head_dim)
 
 print("Q shape:")
 print(Q.shape)
+print(Q)
 
 # -------------------------
 # Head 0
