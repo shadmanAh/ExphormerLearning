@@ -19,10 +19,14 @@ class ExphormerModel(nn.Module):
 
             self.layers.append(MultiHeadExphormer(in_dim=hidden_dim, hidden_dim=hidden_dim, num_heads=num_heads))
 
+        self.classifier = nn.Linear(hidden_dim, 2)
+
     def forward(self, X, mask):
         H = X
 
         for layer in self.layers:
             H = layer(H, mask)
 
-        return H
+        logits = self.classifier(H)
+        
+        return logits
