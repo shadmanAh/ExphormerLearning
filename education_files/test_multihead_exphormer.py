@@ -1,6 +1,6 @@
 import torch
 
-from models.multihead_exphormer import MultiHeadExphormer
+from models.test.multihead_exphormer import MultiHeadExphormer
 
 X = torch.tensor([
     [1.0,0.5,2.0],

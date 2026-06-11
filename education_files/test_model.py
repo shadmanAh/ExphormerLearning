@@ -1,6 +1,6 @@
 import torch
 
-from models.exphormer_model import ExphormerModel
+from models.test.exphormer_model import ExphormerModel
 
 X = torch.tensor([
     [1.0,0.5,2.0],

@@ -1,6 +1,6 @@
 import torch
 
-from models.exphormer_block import ExphormerBlock
+from models.test.exphormer_block import ExphormerBlock
 
 hidden_dim = 8
 

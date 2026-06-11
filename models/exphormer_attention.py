@@ -1,13 +1,16 @@
+from torch_geometric.utils import softmax
 import torch
 import torch.nn as nn
 import math
+from torch_geometric.nn import MessagePassing
 
 
-class ExphormerAttention(nn.Module):
+class ExphormerAttention(MessagePassing):
 
     def __init__(self, hidden_dim):
+        super().__init__(aggr="add")
 
-        super().__init__()
+        self.hidden_dim = hidden_dim
 
         self.Wq = nn.Linear(hidden_dim, hidden_dim)
         self.Wk = nn.Linear(hidden_dim, hidden_dim)
@@ -19,14 +22,19 @@ class ExphormerAttention(nn.Module):
         K = self.Wk(x)
         V = self.Wv(x)
 
-        src = edge_index[0]
-        dst = edge_index[1]
+        return self.propagate(
+            edge_index,
+            Q=Q,
+            K=K,
+            V=V
+        )
 
-        q = Q[src]
-        k = K[dst]
+    def message(self, Q_i, K_j, V_j, index):
 
-        scores = (q * k).sum(dim=-1)
+        score = (Q_i * K_j).sum(dim=-1)
+        score = score / math.sqrt(self.hidden_dim)
 
-        scores = scores / math.sqrt(Q.shape[-1])
+        # ✅ correct softmax usage
+        alpha = softmax(score, index)
 
-        return scores
+        return alpha.unsqueeze(-1) * V_j

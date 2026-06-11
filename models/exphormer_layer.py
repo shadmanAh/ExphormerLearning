@@ -1,40 +1,35 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import math
+
+from models.exphormer_attention import ExphormerAttention
 
 
 class ExphormerLayer(nn.Module):
 
-    def __init__(self, in_dim, hidden_dim, num_heads):
-
+    def __init__(self, hidden_dim, ffn_multiplier=4):
         super().__init__()
-        #تعداد سر 
-        self.head_dim = hidden_dim // num_heads
-        assert hidden_dim % num_heads == 0
 
-        # Node Embedding
-        self.embedding = nn.Linear(in_dim, hidden_dim)
+        self.attention = ExphormerAttention(hidden_dim)
+        self.norm1 = nn.LayerNorm(hidden_dim)
+        self.norm2 = nn.LayerNorm(hidden_dim)
+        self.ffn = nn.Sequential(nn.Linear(hidden_dim, hidden_dim * ffn_multiplier),
+                                 nn.GELU(),
+                                 nn.Linear(hidden_dim * ffn_multiplier, hidden_dim)
+        )
 
-        # Q K V
-        self.Wq = nn.Linear(hidden_dim, hidden_dim)
-        self.Wk = nn.Linear(hidden_dim, hidden_dim)
-        self.Wv = nn.Linear(hidden_dim, hidden_dim)
+    def forward(self, x, edge_index):
+        # ------------------
+        # Attention Block
+        # ------------------
+        attn_out = self.attention(x, edge_index)
+        
+        x = self.norm1(x + attn_out)
 
-    def forward(self, X, mask):
+        # ------------------
+        # FFN Block
+        # ------------------
+        ffn_out = self.ffn(x)
 
-        H = self.embedding(X)
+        x = self.norm2(x + ffn_out)
 
-        Q = self.Wq(H)
-        K = self.Wk(H)
-        V = self.Wv(H)
-
-        scores = ( Q @ K.T) / math.sqrt(Q.shape[1])
-
-        scores = scores.masked_fill( mask == 0, -1e9)
-
-        attention = F.softmax(scores, dim=1)
-
-        output = attention @ V
-
-        return output
+        return x
